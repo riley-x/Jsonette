@@ -1,5 +1,4 @@
-#ifndef JSONETTE_H
-#define JSONETTE_H
+#pragma once
 
 #include <stdexcept>
 #include <string>
@@ -9,7 +8,7 @@
 
 namespace jsonette
 {
-	enum class JType { object, array, int64, dbl, string, tru, fal, null };
+	enum class JType { Object, Array, Integer, Double, String, True, False, Null };
 
 	// A class representing a JSON value
 	class JSON
@@ -18,7 +17,7 @@ namespace jsonette
 		///////////////////////////////////////////////////////////////////////
 		// Constructors/Destructors
 		///////////////////////////////////////////////////////////////////////
-		JSON() : m_type(JType::null), m_data(nullptr) {} // null value
+		JSON() : m_type(JType::Null), m_data(nullptr) {} // null value
 		JSON(std::string const & str)
 		{
 			init(str, 0, str.size());
@@ -26,7 +25,7 @@ namespace jsonette
 
 		JSON(JSON&& other) : m_type(other.m_type), m_data(other.m_data)
 		{
-			other.m_type = JType::null;
+			other.m_type = JType::Null;
 			other.m_data = nullptr;
 		}
 
@@ -37,7 +36,7 @@ namespace jsonette
 				clear();
 				m_type = other.m_type;
 				m_data = other.m_data;
-				other.m_type = JType::null;
+				other.m_type = JType::Null;
 				other.m_data = nullptr;
 			}
 			return *this;
@@ -49,25 +48,25 @@ namespace jsonette
 		{
 			switch (m_type)
 			{
-			case JType::object:
+			case JType::Object:
 				delete reinterpret_cast<Obj*>(m_data);
 				break;
-			case JType::array:
+			case JType::Array:
 				delete reinterpret_cast<std::vector<JSON>*>(m_data);
 				break;
-			case JType::int64:
+			case JType::Integer:
 				delete reinterpret_cast<int64_t*>(m_data);
 				break;
-			case JType::dbl:
+			case JType::Double:
 				delete reinterpret_cast<double*>(m_data);
 				break;
-			case JType::string:
+			case JType::String:
 				delete reinterpret_cast<std::string*>(m_data);
 				break;
 			default:
 				break;
 			}
-			m_type = JType::null;
+			m_type = JType::Null;
 			m_data = nullptr;
 		}
 
@@ -75,7 +74,7 @@ namespace jsonette
 		// Get
 		///////////////////////////////////////////////////////////////////////
 
-		inline bool is_null() const { return m_type == JType::null; }
+		inline bool is_null() const { return m_type == JType::Null; }
 		inline JType const type() const { return m_type; }
 		inline std::string to_string(bool pretty = true) const { return to_string(pretty, 0); }
 
@@ -85,39 +84,39 @@ namespace jsonette
 		// Object -- store a pair of vectors for keys/values
 		inline std::vector<std::string> const & get_keys() const
 		{
-			if (m_type != JType::object) throw_type_error();
+			if (m_type != JType::Object) throw_type_error();
 			Obj *data = reinterpret_cast<Obj*>(m_data);
 			return data->keys;
 		}
 		inline std::vector<JSON> const & get_vals() const
 		{
-			if (m_type != JType::object) throw_type_error();
+			if (m_type != JType::Object) throw_type_error();
 			Obj *data = reinterpret_cast<Obj*>(m_data);
 			return data->vals;
 		}
 		inline JSON const & operator[] (std::string const & str) const // throws on error
 		{
-			if (m_type != JType::object) throw_type_error();
+			if (m_type != JType::Object) throw_type_error();
 			Obj *data = reinterpret_cast<Obj*>(m_data);
 			auto it = std::find(data->keys.begin(), data->keys.end(), str);
 			if (it == data->keys.end()) throw_indx_error(str);
 			return data->vals[std::distance(data->keys.begin(), it)];
 		}
-
+		
 		// Array -- vector of JSON values
 		inline std::vector<JSON> const & get_arr() const
 		{
-			if (m_type != JType::array) throw_type_error();
+			if (m_type != JType::Array) throw_type_error();
 			return *reinterpret_cast<std::vector<JSON>*>(m_data);
 		}
 		inline size_t get_arr_size() const
 		{
-			if (m_type != JType::array) throw_type_error();
+			if (m_type != JType::Array) throw_type_error();
 			return reinterpret_cast<std::vector<JSON>*>(m_data)->size();
 		}
 		inline JSON const & operator[] (size_t i) const // segfaults if out of bounds
 		{
-			if (m_type != JType::array) throw_type_error();
+			if (m_type != JType::Array) throw_type_error();
 			std::vector<JSON>* data = reinterpret_cast<std::vector<JSON>*>(m_data);
 			return (*data)[i];
 		}
@@ -126,7 +125,7 @@ namespace jsonette
 		// Integer
 		inline int64_t get_int() const
 		{
-			if (m_type != JType::int64) throw_type_error();
+			if (m_type != JType::Integer) throw_type_error();
 			return *reinterpret_cast<int64_t*>(m_data);
 		}
 		template<> inline char		get<char>() const { return static_cast<char>(get_int()); }
@@ -138,7 +137,7 @@ namespace jsonette
 		// Double
 		inline double get_dbl() const
 		{
-			if (m_type != JType::dbl) throw_type_error();
+			if (m_type != JType::Double) throw_type_error();
 			return *reinterpret_cast<double*>(m_data);
 		}
 		template<> inline float  get<float> () const { return static_cast<float>(get_dbl()); }
@@ -147,7 +146,7 @@ namespace jsonette
 		// String
 		inline std::string const & get_str() const
 		{
-			if (m_type != JType::string) throw_type_error();
+			if (m_type != JType::String) throw_type_error();
 			return *reinterpret_cast<std::string*>(m_data);
 		}
 		template<> inline std::string const & get<std::string const &>() const { return get_str(); }
@@ -158,8 +157,8 @@ namespace jsonette
 		{
 			switch (m_type)
 			{
-			case JType::tru: return true;
-			case JType::fal: return false;
+			case JType::True: return true;
+			case JType::False: return false;
 			default: throw_type_error();
 			}
 		}
@@ -173,7 +172,7 @@ namespace jsonette
 		///////////////////////////////////////////////////////////////////////
 		JType m_type;
 		void  *m_data;
-
+		
 		struct Obj
 		{
 			std::vector<std::string> keys;
@@ -184,14 +183,14 @@ namespace jsonette
 		// Utility Functions
 		///////////////////////////////////////////////////////////////////////
 		inline void throw_type_error() const { throw std::runtime_error("JSON::get() bad type"); }
-		inline void throw_read_error(std::string const & str, size_t at) const
-		{
+		inline void throw_read_error(std::string const & str, size_t at) const 
+		{ 
 			std::cerr << "Bad text: " << str.c_str() + at << std::endl;
-			throw std::runtime_error("JSON() parse error");
+			throw std::runtime_error("JSON() parse error"); 
 		}
-		inline void throw_indx_error(std::string const & indx) const
-		{
-			throw std::runtime_error("JSON() bad index: " + indx);
+		inline void throw_indx_error(std::string const & indx) const 
+		{ 
+			throw std::runtime_error("JSON() bad index: " + indx); 
 		}
 
 		// Whitespace
@@ -205,7 +204,7 @@ namespace jsonette
 			return (c == '0' || c == '1' || c == '2' || c == '3' || c == '4' ||
 					c == '5' || c == '6' || c == '7' || c == '8' || c == '9');
 		}
-		// Finds the next non-whitespace character
+		// Finds the next non-whitespace character 
 		inline size_t next_non_ws(std::string const & str, size_t begin, size_t end)
 		{
 			while (begin != end)
@@ -254,7 +253,7 @@ namespace jsonette
 					if (ind < end && str[ind] == ',') ind++;
 				}
 
-				m_type = JType::object;
+				m_type = JType::Object;
 				m_data = reinterpret_cast<void*>(data);
 				return ind + 1;
 			}
@@ -270,7 +269,7 @@ namespace jsonette
 					ind = next_non_ws(str, ind, end);
 					if (ind < end && str[ind] == ',') ind++;
 				}
-				m_type = JType::array;
+				m_type = JType::Array;
 				m_data = reinterpret_cast<void*>(data);
 				return ind + 1;
 			}
@@ -278,11 +277,11 @@ namespace jsonette
 			{
 				size_t end = str.find('"', ind + 1); // TODO escape characters
 				if (end == std::string::npos) throw_read_error(str, ind);
-				m_type = JType::string;
+				m_type = JType::String;
 				m_data = reinterpret_cast<void*>(new std::string(str, ind + 1, end - ind - 1));
 				return end + 1;
 			}
-			else if (is_digit(str[ind]) || str[ind] == '-' || str[ind] == '+')// is a number
+			else if (is_digit(str[ind]) || str[ind] == '-' || str[ind] == '+')// is a number 
 			{
 				// parse as double if '.' or 'e','E' is present
 				bool is_dbl = false;
@@ -294,13 +293,13 @@ namespace jsonette
 				char *endptr = nullptr;
 				if (is_dbl)
 				{
-					m_type = JType::dbl;
+					m_type = JType::Double;
 					double *data = new double(strtod(str.c_str() + ind, &endptr));
 					m_data = reinterpret_cast<void*>(data);
 				}
 				else
 				{
-					m_type = JType::int64;
+					m_type = JType::Integer;
 					int64_t *data = new int64_t(strtoll(str.c_str() + ind, &endptr, 10));
 					m_data = reinterpret_cast<void*>(data);
 				}
@@ -309,17 +308,17 @@ namespace jsonette
 			}
 			else if (strncmp(str.c_str() + ind, "true", 4) == 0) // is boolean true
 			{
-				m_type = JType::tru;
+				m_type = JType::True;
 				return ind + 4;
 			}
 			else if (strncmp(str.c_str() + ind, "false", 5) == 0) // is boolean false
 			{
-				m_type = JType::fal;
+				m_type = JType::False;
 				return ind + 5;
 			}
 			else if (strncmp(str.c_str() + ind, "null", 4) == 0) // null
 			{
-				m_type = JType::null;
+				m_type = JType::Null;
 				return ind + 4;
 			}
 			else
@@ -332,7 +331,7 @@ namespace jsonette
 		///////////////////////////////////////////////////////////////////////
 		// To String
 		///////////////////////////////////////////////////////////////////////
-
+		
 		// `indent`: indent level of parent for use by object and array.
 		// i.e. closing bracket is at level `indent`, while values should indented one more
 		std::string to_string(bool pretty, int indent) const
@@ -340,7 +339,7 @@ namespace jsonette
 			const static int tabsize = 2;
 			switch (m_type)
 			{
-			case JType::object:
+			case JType::Object:
 			{
 				std::string str((pretty) ? "{\n" : "{");
 				auto const & keys = get_keys();
@@ -356,7 +355,7 @@ namespace jsonette
 				str.append("}");
 				return str;
 			}
-			case JType::array:
+			case JType::Array:
 			{
 				std::string str((pretty) ? "[\n" : "[");
 				auto const & vals = get_arr();
@@ -370,17 +369,17 @@ namespace jsonette
 				str.append("]");
 				return str;
 			}
-			case JType::int64:
+			case JType::Integer:
 				return std::to_string(get_int());
-			case JType::dbl:
+			case JType::Double:
 				return std::to_string(get_dbl());
-			case JType::string:
+			case JType::String:
 				return "\"" + get_str() + "\"";
-			case JType::tru:
+			case JType::True:
 				return "true";
-			case JType::fal:
+			case JType::False:
 				return "false";
-			case JType::null:
+			case JType::Null:
 				return "null";
 			default:
 				return "";
@@ -399,16 +398,15 @@ inline std::ostream & operator << (std::ostream &out, jsonette::JType type)
 {
 	switch (type)
 	{
-	case jsonette::JType::object: out << "object"; break;
-	case jsonette::JType::array: out << "array"; break;
-	case jsonette::JType::int64: out << "int"; break;
-	case jsonette::JType::dbl: out << "double"; break;
-	case jsonette::JType::string: out << "string"; break;
-	case jsonette::JType::tru: out << "true"; break;
-	case jsonette::JType::fal: out << "false"; break;
-	case jsonette::JType::null: out << "null"; break;
+	case jsonette::JType::Object: out << "object"; break;
+	case jsonette::JType::Array: out << "array"; break;
+	case jsonette::JType::Integer: out << "int"; break;
+	case jsonette::JType::Double: out << "double"; break;
+	case jsonette::JType::String: out << "string"; break;
+	case jsonette::JType::True: out << "true"; break;
+	case jsonette::JType::False: out << "false"; break;
+	case jsonette::JType::Null: out << "null"; break;
 	}
 	return out;
 }
 
-#endif // JSONETTE_H
