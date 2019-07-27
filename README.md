@@ -1,9 +1,10 @@
 # Jsonette
-A pico-minimal json reader.
+An exercise to create a pico-minimal json reader. 
 
 ### Basic usage:
 
 ```c++
+#include "jsonette.h"
 using namespace std;
 using namespace jsonette;
 
@@ -60,6 +61,6 @@ string s = j[5].get<string>(); // "hello world"
 string s2 = j[5].get_str(); // "hello world"
 
 JSON const & j2 = j[6];
-string s3 = j2["key"];
+string s3 = j2["key"]; // "value"
 ```
 
