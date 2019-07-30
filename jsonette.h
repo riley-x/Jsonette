@@ -1,4 +1,35 @@
-#pragma once
+#ifndef JSONETTE_H
+#define JSONETTE_H
+
+/*
+jsonette.h: 
+
+A pico-minimal JSON reader. Simply include this header to use.
+
+Jsonette uses a single class JSON that represents a single JSON value. It stores
+its type with the enum JType. To get values, use either get() or []. Calling with
+the wrong type / method will throw std::runtime_error().
+
+Usage:
+	JSON j(text);
+	cout << j.type();
+
+	bool b = j.is_null();
+
+	// j.type() == JType.Object
+	JSON const & val = j["key"]; 
+	vector<string> const & keys = j.get_keys();
+	vector<JSON>   const & vals = j.get_vals();
+	
+	// j.type() == JType::Array
+	JSON const & val = j[0]; 
+	vector<JSON> const & vals = j.get_arr();
+
+	bool c	 = j.get<bool>();	// j.type() == JType::True or JType::False
+	int i	 = j.get<int>();	// j.type() == JType::Integer
+	double d = j.get<double>(); // j.type() == JType::Double
+	string s = j.get<string>(); // "j.type() == JType::String
+*/
 
 #include <stdexcept>
 #include <string>
@@ -391,8 +422,11 @@ namespace jsonette
 	};
 }
 
-
-enum class JType { object, array, int64, dbl, string, tru, fal, null };
+inline std::ostream & operator << (std::ostream &out, jsonette::JSON const & j)
+{
+	out << j.to_string();
+	return out;
+}
 
 inline std::ostream & operator << (std::ostream &out, jsonette::JType type)
 {
@@ -410,3 +444,4 @@ inline std::ostream & operator << (std::ostream &out, jsonette::JType type)
 	return out;
 }
 
+#endif // JSONETTE_H
