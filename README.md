@@ -61,6 +61,6 @@ string s = j[5].get<string>(); // "hello world"
 string s2 = j[5].get_str(); // "hello world"
 
 JSON const & j2 = j[6];
-string s3 = j2["key"]; // "value"
+string s3 = j2["key"].get<string>(); // "value"
 ```
 
